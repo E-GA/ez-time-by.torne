@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EZ-Time - Google Sheets Sync</title>
+    <title>EZ-Time - Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
@@ -13,15 +13,14 @@
         .hidden { display: none; }
         .status-paid { color: #198754; font-weight: bold; }
         .status-pending { color: #fd7e14; font-weight: bold; }
-        .profile-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; cursor: pointer; background-color: #eee; }
-        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:flex; justify-content:center; align-items:center; z-index:9999; }
+        .profile-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.1); cursor: pointer; background-color: #eee; }
+        .loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); display:flex; justify-content:center; align-items:center; z-index:9999; }
+        .announcement-box { border-left: 5px solid var(--plan-color); background-color: #fffdf5; }
     </style>
 </head>
 <body>
 
-    <div id="loading" class="loading-overlay hidden">
-        <div class="spinner-border text-primary"></div>
-    </div>
+    <div id="loading" class="loading-overlay hidden"><div class="spinner-border text-primary"></div></div>
 
     <nav id="mainNav" class="navbar navbar-expand-lg navbar-dark bg-dark hidden">
         <div class="container">
@@ -35,17 +34,17 @@
         <div id="loginPage" class="mx-auto" style="max-width: 400px; margin-top: 50px;">
             <div class="card p-4 text-center border-top border-primary border-4 mb-4">
                 <h2 class="mb-4 fw-bold text-primary">EZ-Time</h2>
-                <input type="text" id="username" class="form-control mb-2" placeholder="ชื่อผู้ใช้งาน">
-                <input type="password" id="password" class="form-control mb-3" placeholder="รหัสผ่าน">
+                <div class="mb-3"><input type="text" id="username" class="form-control" placeholder="ชื่อผู้ใช้งาน"></div>
+                <div class="mb-3"><input type="password" id="password" class="form-control" placeholder="รหัสผ่าน"></div>
                 <button class="btn btn-primary w-100 py-2" onclick="login()">เข้าสู่ระบบ</button>
             </div>
-            <div class="card p-3 shadow-sm" style="border-left: 5px solid var(--plan-color);">
+            <div class="card p-3 announcement-box shadow-sm">
                 <h6 class="fw-bold text-warning"><i class="bi bi-megaphone-fill"></i> แผนงานครั้งถัดไป</h6>
-                <div id="loginPlanList" class="small text-muted">กำลังโหลดแผนงาน...</div>
+                <div id="loginPlanList" class="small text-muted">กำลังโหลด...</div>
             </div>
         </div>
 
-        <!-- Admin Section -->
+        <!-- Admin -->
         <div id="adminPage" class="hidden">
             <div class="row">
                 <div class="col-md-4">
@@ -55,7 +54,7 @@
                             <li class="nav-item"><button class="nav-link py-1" data-bs-toggle="tab" data-bs-target="#tab-emp">พนักงาน</button></li>
                             <li class="nav-item"><button class="nav-link py-1" data-bs-toggle="tab" data-bs-target="#tab-plan">แผนงาน</button></li>
                         </ul>
-                        <div class="tab-content pt-2">
+                        <div class="tab-content">
                             <div class="tab-pane fade show active" id="tab-work">
                                 <select id="selectEmp" class="form-select mb-2"></select>
                                 <input type="date" id="workDate" class="form-control mb-2">
@@ -68,7 +67,7 @@
                                 <button class="btn btn-success w-100" onclick="addWorkLog()">บันทึกงาน</button>
                             </div>
                             <div class="tab-pane fade" id="tab-emp">
-                                <input type="text" id="empName" class="form-control mb-2" placeholder="ชื่อ-นามสกุล">
+                                <input type="text" id="empName" class="form-control mb-2" placeholder="ชื่อ">
                                 <input type="text" id="empAcc" class="form-control mb-2" placeholder="เลขบัญชี">
                                 <button class="btn btn-primary w-100" onclick="addEmployee()">เพิ่มพนักงาน</button>
                             </div>
@@ -78,7 +77,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card p-3"><div id="adminEmpList" class="small"></div></div>
+                    <div class="card p-3 shadow-sm"><div id="adminEmpList" class="small"></div></div>
                 </div>
                 <div class="col-md-8">
                     <div class="card p-3 shadow-sm">
@@ -94,21 +93,25 @@
             </div>
         </div>
 
-        <!-- User Section -->
+        <!-- User -->
         <div id="userPage" class="hidden">
             <div class="row">
                 <div class="col-md-4 text-center">
                     <div class="card p-3 mb-3 border-top border-primary border-4 shadow-sm">
-                        <img id="uProfileImg" src="https://via.placeholder.com/110" class="profile-img mx-auto mb-3" onclick="document.getElementById('profileInput').click()">
-                        <input type="file" id="profileInput" class="hidden" accept="image/*" onchange="uploadPhoto(this)">
+                        <div class="profile-wrapper mb-3" onclick="document.getElementById('profileInput').click()">
+                            <img id="uProfileImg" src="https://via.placeholder.com/110" class="profile-img mx-auto">
+                            <input type="file" id="profileInput" class="hidden" accept="image/*" onchange="uploadPhoto(this)">
+                        </div>
                         <h4 id="uDisplayName" class="fw-bold"></h4>
                         <div class="mb-3 text-start small">
-                            <label class="fw-bold">ธนาคาร/เลขบัญชี:</label>
+                            <label class="fw-bold">ข้อมูลบัญชี:</label>
                             <input type="text" id="uInputBank" class="form-control form-control-sm mb-1" placeholder="ธนาคาร">
                             <input type="text" id="uInputAcc" class="form-control form-control-sm mb-2" placeholder="เลขบัญชี">
-                            <button class="btn btn-primary btn-sm w-100" onclick="updateUserAccount()">อัปเดตบัญชี</button>
+                            <button class="btn btn-primary btn-sm w-100" onclick="updateUserAccount()">อัปเดตข้อมูล</button>
                         </div>
-                        <div class="card mb-2 p-2 bg-primary text-white">รายได้รวม: <span id="uTotalAll" class="fw-bold">0</span></div>
+                        <div class="card mb-2 p-2 bg-primary text-white d-flex justify-content-between flex-row">
+                            <span>รายได้รวม:</span> <span id="uTotalAll" class="fw-bold">0</span>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-8">
@@ -118,14 +121,17 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // *** วาง SCRIPT_URL ของคุณที่นี่ ***
+        // *** วาง URL ของคุณตรงนี้ ***
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyAjA7WUEQ3CH-l5MP4ZkHVS6uY0Hq70E7QBJPj7wC5anplaI7XMpahP9HHwE9xjr2x/exec";
 
         let employees = [];
         let workLogs = [];
         let workPlans = [];
         let currentUser = null;
+
+        window.onload = fetchAllData;
 
         async function fetchAllData() {
             showLoading(true);
@@ -139,7 +145,7 @@
                 workLogs = await lRes.json();
                 workPlans = await pRes.json();
                 renderPublicPlans();
-            } catch (e) { alert("โหลดข้อมูลผิดพลาด กรุณาตรวจสอบการตั้งค่า Google Sheets"); }
+            } catch (err) { console.error(err); }
             showLoading(false);
         }
 
@@ -163,22 +169,19 @@
             } else {
                 currentUser = employees.find(e => e.username === u && (e.password || '1234') === p);
                 if(currentUser) { showPage('userPage'); renderUserDashboard(); }
-                else alert('ล็อกอินไม่สำเร็จ');
+                else alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
             }
         }
 
-        // --- ระบบบันทึกพนักงาน ---
         async function addEmployee() {
             const name = document.getElementById('empName').value;
             const acc = document.getElementById('empAcc').value;
             if(!name) return;
-            const newEmp = { id: Date.now(), username: 'user'+(employees.length+1), password: '1234', name, bank: '', acc, photo: '' };
-            employees.push(newEmp);
+            employees.push({ id: Date.now(), username: 'user'+(employees.length+1), password: '1234', name, bank: '', acc, photo: '' });
             await syncData('employees', employees);
             updateAdminUI();
         }
 
-        // --- ระบบลงงาน ---
         async function addWorkLog() {
             const eid = document.getElementById('selectEmp').value;
             const date = document.getElementById('workDate').value;
@@ -197,20 +200,16 @@
             renderAdminDashboard();
         }
 
-        // --- ระบบแผนงาน ---
         async function addWorkPlan() {
             const text = document.getElementById('planText').value;
             if(!text) return;
             workPlans.push({ id: Date.now(), text });
             await syncData('workPlans', workPlans);
             renderPublicPlans();
-            alert("ประกาศแล้ว");
         }
 
-        // --- ฟังก์ชันแสดงผล ---
         function updateAdminUI() {
-            const select = document.getElementById('selectEmp');
-            select.innerHTML = employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+            document.getElementById('selectEmp').innerHTML = employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
             document.getElementById('adminEmpList').innerHTML = employees.map(e => `<div><b>${e.name}</b> (${e.username})</div>`).join('');
         }
 
@@ -218,13 +217,7 @@
             const tbody = document.getElementById('adminReportBody');
             tbody.innerHTML = [...workLogs].reverse().map(log => {
                 const emp = employees.find(e => e.id == log.empId) || {name:'N/A', acc:'-'};
-                return `<tr>
-                    <td>${log.date}<br><b>${emp.name}</b></td>
-                    <td>${emp.acc}</td>
-                    <td>${log.total}</td>
-                    <td>${log.status}</td>
-                    <td><button class="btn btn-sm text-danger" onclick="deleteLog(${log.id})"><i class="bi bi-trash"></i></button></td>
-                </tr>`;
+                return `<tr><td>${log.date}<br><b>${emp.name}</b></td><td>${emp.acc}</td><td>${log.total}</td><td>${log.status}</td><td><button class="btn btn-sm text-danger" onclick="deleteLog(${log.id})"><i class="bi bi-trash"></i></button></td></tr>`;
             }).join('');
         }
 
@@ -244,15 +237,29 @@
             document.getElementById('uInputBank').value = currentUser.bank || '';
             document.getElementById('uInputAcc').value = currentUser.acc || '';
             document.getElementById('uProfileImg').src = currentUser.photo || "https://via.placeholder.com/110";
-            // ย่อๆ: รายละเอียดเดือนจะคล้ายเดิมแต่ดึงจาก workLogs array
             document.getElementById('uTotalAll').innerText = workLogs.filter(l => l.empId == currentUser.id).reduce((s, l) => s + parseFloat(l.total), 0).toLocaleString();
+            
+            // Render Accordion
+            const accordion = document.getElementById('monthlyAccordion');
+            accordion.innerHTML = '';
+            const myLogs = workLogs.filter(l => l.empId == currentUser.id);
+            let months = {};
+            myLogs.forEach(l => {
+                const m = l.date.substring(0, 7);
+                if(!months[m]) months[m] = [];
+                months[m].push(l);
+            });
+
+            Object.keys(months).reverse().forEach((m, idx) => {
+                const rows = months[m].map(log => `<tr><td>${log.date}</td><td>${log.hours}ชม.</td><td>${log.total}฿</td><td>${log.status}</td></tr>`).join('');
+                accordion.innerHTML += `<div class="accordion-item mb-2 border-0 shadow-sm"><h2 class="accordion-header"><button class="accordion-button ${idx===0?'':'collapsed'}" data-bs-toggle="collapse" data-bs-target="#c${idx}">${m}</button></h2><div id="c${idx}" class="accordion-collapse collapse ${idx===0?'show':''}"><div class="accordion-body p-0 small"><table class="table mb-0"><tbody>${rows}</tbody></table></div></div></div>`;
+            });
         }
 
         async function updateUserAccount() {
-            currentUser.bank = document.getElementById('uInputBank').value;
-            currentUser.acc = document.getElementById('uInputAcc').value;
             const idx = employees.findIndex(e => e.id == currentUser.id);
-            employees[idx] = currentUser;
+            employees[idx].bank = document.getElementById('uInputBank').value;
+            employees[idx].acc = document.getElementById('uInputAcc').value;
             await syncData('employees', employees);
             alert("บันทึกแล้ว");
         }
@@ -261,10 +268,9 @@
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = async function(e) {
-                    currentUser.photo = e.target.result;
-                    document.getElementById('uProfileImg').src = currentUser.photo;
                     const idx = employees.findIndex(emp => emp.id == currentUser.id);
-                    employees[idx].photo = currentUser.photo;
+                    employees[idx].photo = e.target.result;
+                    document.getElementById('uProfileImg').src = employees[idx].photo;
                     await syncData('employees', employees);
                 };
                 reader.readAsDataURL(input.files[0]);
@@ -274,13 +280,10 @@
         function showPage(id) {
             document.querySelectorAll('.container > div').forEach(d => d.classList.add('hidden'));
             document.getElementById('mainNav').classList.remove('hidden');
-            document.getElementById('loginPage').classList.add('hidden');
             document.getElementById(id).classList.remove('hidden');
         }
         function logout() { location.reload(); }
         function showLoading(show) { document.getElementById('loading').classList.toggle('hidden', !show); }
-
-        window.onload = fetchAllData;
     </script>
 </body>
 </html>
